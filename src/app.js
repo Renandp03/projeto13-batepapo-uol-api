@@ -26,10 +26,6 @@ try{
 catch{(err) => console.log(err)}
 
 
-
-
-
-
 app.post("/participants", async (req,res) => {
 
     const participant = req.body
@@ -68,6 +64,8 @@ app.post("/participants", async (req,res) => {
 
 app.get("/participants", async (req,res) => {
 
+   
+
     try{
         const participants = await db.collection("participants").find().toArray()
 
@@ -77,9 +75,42 @@ app.get("/participants", async (req,res) => {
     
 })
 
-app.post("/messages",(req,res) => {
+app.post("/messages", async (req,res) => {
 
-   
+    const { to, text, type } = req.body
+    const { user } = req.header
+    const time = Date.now()
+
+
+
+    const participants = await db.collection("participants").find().toArray()
+    
+    const participantExist = participants.find((p) => p.name === user)
+
+    if(!participantExist){return res.status(422).send("participante não existe")}
+
+    const message = {from:user,to,text,type,time}
+    const messageSchema = Joi.object({
+        to:Joi.string().required(),
+        text:Joi.string().required(),
+        type:Joi.allow("private_message").allow("message")
+    })
+
+    const validation = messageSchema.validate(message)
+
+    if(validation.error){
+        return res.sendStatus(422)
+    }
+
+    try{
+        await db.collection("messages").insertOne(message)
+        res.status(201).send("ok")
+
+    }
+    catch(error){
+        res.send(error)
+    }
+
     
 })
 
