@@ -2,6 +2,7 @@ import express from "express"
 import cors from "cors"
 import dotenv from "dotenv"
 import Joi from "joi"
+import dayjs from "dayjs"
 import { MongoClient, ObjectId } from "mongodb"
 
 dotenv.config()
@@ -78,28 +79,30 @@ app.get("/participants", async (req,res) => {
 app.post("/messages", async (req,res) => {
 
     const { to, text, type } = req.body
-    const { user } = req.header
-    const time = Date.now()
+    const { user } = req.headers
+    const time = dayjs().format().substring(11,19)
 
 
 
-    const participants = await db.collection("participants").find().toArray()
-    
-    const participantExist = participants.find((p) => p.name === user)
+    const participant = await db.collection("participants").findOne({name:user})
 
-    if(!participantExist){return res.status(422).send("participante não existe")}
+    if(!participant){return res.status(422).send("participante não existe")}
 
     const message = {from:user,to,text,type,time}
     const messageSchema = Joi.object({
+        from:Joi.string().required(),
         to:Joi.string().required(),
         text:Joi.string().required(),
-        type:Joi.allow("private_message").allow("message")
+        type:Joi.allow("private_message").allow("message"),
+        time:Joi.string().required()
     })
 
-    const validation = messageSchema.validate(message)
+    const validation = messageSchema.validate(message,{ abortEarly: false })
 
     if(validation.error){
-        return res.sendStatus(422)
+        const errors = validation.error.details.map((detail) => detail.message)
+
+        return res.status(422).send(errors)
     }
 
     try{
