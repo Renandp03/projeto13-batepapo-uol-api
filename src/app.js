@@ -49,7 +49,7 @@ app.post("/participants", async (req,res) => {
 
     try{
 
-        // const operation = await db.collection('UOL').find
+     
 
     }
     catch{
