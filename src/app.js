@@ -49,7 +49,13 @@ app.post("/participants", async (req,res) => {
 
     try{
 
-     
+        const  participantExist = await db.collection('participants').findOne({name: participant.name})
+
+        if(participantExist){return res.status(409).send("O participante já existe")}
+
+        await db.collection("participants").insertOne({name:participant.name, lastStatus: Date.now()})
+
+        res.sendStatus(201)
 
     }
     catch{
@@ -60,18 +66,27 @@ app.post("/participants", async (req,res) => {
 
 })
 
-app.get("/participants",(req,res) => {
+app.get("/participants", async (req,res) => {
+
+    try{
+        const participants = await db.collection("participants").find().toArray()
+
+        res.send(participants)
+    }
+    catch(error){res.status(400).send("algo deu errado")}
     
 })
 
 app.post("/messages",(req,res) => {
+
+   
     
 })
 
 app.get("/messages", async (req,res) => {
 
    try{
-       const messages =  await db.collection("UOL").find().toArray() 
+       const messages =  await db.collection("messages").find().toArray() 
 
        res.send(messages)
    }
