@@ -90,14 +90,14 @@ app.post("/messages", async (req,res) => {
 
     const message = {from:user,to,text,type,time}
     const messageSchema = Joi.object({
-        from:Joi.string().required(),
-        to:Joi.string().required(),
-        text:Joi.string().required(),
-        type:Joi.allow("private_message").allow("message"),
+        from:Joi.string().required().min(1),
+        to:Joi.string().required().min(1),
+        text:Joi.string().required().min(1),
+        type:Joi.string().valid("message","private_message").required(),
         time:Joi.string().required()
     })
 
-    const validation = messageSchema.validate(message,{ abortEarly: false })
+    const validation = messageSchema.validate({...message},{ abortEarly: false })
 
     if(validation.error){
         const errors = validation.error.details.map((detail) => detail.message)
