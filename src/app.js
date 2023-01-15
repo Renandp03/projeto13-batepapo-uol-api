@@ -119,10 +119,22 @@ app.post("/messages", async (req,res) => {
 
 app.get("/messages", async (req,res) => {
 
+    const { limit } = req.query
+    const { user } = req.headers
+
+    function select(message,user){
+        if(message.to === user || message.type === user || message.from === user){
+            return message
+        }
+    }
+
    try{
        const messages =  await db.collection("messages").find().toArray() 
+       const filterMessages = [... messages].reverse().filter((m)=> select(m,user))
 
-       res.send(messages)
+       if(limit) return res.send (filterMessages.slice(0,[limit]))
+
+       res.send(filterMessages)
    }
    catch{
     res.send("algo deu errado")
@@ -130,8 +142,28 @@ app.get("/messages", async (req,res) => {
     
 })
 
-app.post("/status",(req,res) => {
 
+app.post("/status", async (req,res) => {
+    const { user } = req.headers
+
+
+    try{
+
+        const participant = await db.collection("participants").findOne({name:user})
+
+        console.log(participant)
+        
+        if(!participant){return res.sendStatus(404)}
+
+        await db.collection("participants").updateOne({name:user},{$set:{lastStatus:Date.now()}})
+
+        res.sendStatus(200)
+
+
+    }
+    catch(error){
+        console.log(error)
+    }
 })
 
 
