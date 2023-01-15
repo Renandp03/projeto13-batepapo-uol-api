@@ -134,9 +134,9 @@ app.get("/messages", async (req,res) => {
 
    try{
        const messages =  await db.collection("messages").find().toArray() 
-       const filterMessages = [... messages].reverse().filter((m)=> select(m,user))
+       const filterMessages = [... messages].filter((m)=> select(m,user))
 
-       if(limit) return res.send (filterMessages.slice(0,[limit]))
+       if(limit) return res.send (filterMessages.slice(filterMessages.length -limit, filterMessages.length))
 
        res.send(filterMessages)
    }
@@ -177,7 +177,14 @@ const exit = async () =>{
 
         await participants.map(
             (p) => {
-                now - p.lastStatus <= 10000 &&  db.collection("participants").deleteOne({_id:ObjectId(p._id)})
+                if((now - p.lastStatus) <= 10000){ 
+                    db.collection("participants").deleteOne({_id:ObjectId(p._id)})
+
+                    db.collection("messages").insertOne({from: p.name, to: "Todos", text: "sai da sala...", type: "status", time: dayjs().format().substring(11,19)})
+
+                    }
+
+
             }
         )
     }
