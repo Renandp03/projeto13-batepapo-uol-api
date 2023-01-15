@@ -32,7 +32,7 @@ app.post("/participants", async (req,res) => {
     const participant = req.body
 
     const participantSchema = Joi.object({
-        name:Joi.string().required()
+        name:Joi.string().required().min(1)
     })
 
     const validation = participantSchema.validate(participant)
@@ -46,11 +46,13 @@ app.post("/participants", async (req,res) => {
 
     try{
 
-        const  participantExist = await db.collection('participants').findOne({name: participant.name})
+        const  participantExists = await db.collection('participants').findOne({name: participant.name})
 
-        if(participantExist){return res.status(409).send("O participante já existe")}
+        if(participantExists){return res.status(409).send("O participante já existe")}
 
         await db.collection("participants").insertOne({name:participant.name, lastStatus: Date.now()})
+
+        await db.collection("messages").insertOne({from:participant.name,to:"Todos", text:"entra na sala...",type: "status", time:dayjs().format().substring(11,19)})
 
         res.sendStatus(201)
 
@@ -123,7 +125,7 @@ app.get("/messages", async (req,res) => {
     const { user } = req.headers
 
     function select(message,user){
-        if(message.to === user || message.type === user || message.from === user){
+        if(message.to === user || message.type === user || message.from === user || message.type == "status"){
             return message
         }
     }
@@ -144,14 +146,12 @@ app.get("/messages", async (req,res) => {
 
 
 app.post("/status", async (req,res) => {
-    const { user } = req.headers
 
+    const { user } = req.headers
 
     try{
 
         const participant = await db.collection("participants").findOne({name:user})
-
-        console.log(participant)
         
         if(!participant){return res.sendStatus(404)}
 
@@ -166,5 +166,22 @@ app.post("/status", async (req,res) => {
     }
 })
 
+
+const exit = async () =>{
+    const now = Date.now()
+
+    try{
+        const participants = await db.collection("participants").find().toArray()
+
+        await participants.map(
+            (p) => {
+                now - p.lastStatus <= 10000 &&  db.collection("participants").deleteOne({_id:ObjectId(p._id)})
+            }
+        )
+    }
+    catch(error){console.log(error)}
+}
+
+setInterval(exit, 15000)
 
 app.listen(PORT, () => console.log(`Rondando servidor na porta ${PORT}`))
