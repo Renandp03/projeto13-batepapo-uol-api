@@ -177,7 +177,7 @@ const exit = async () =>{
 
         await participants.map(
             (p) => {
-                if((now - p.lastStatus) <= 10000){ 
+                if((now - p.lastStatus) >= 10000){ 
                     db.collection("participants").deleteOne({_id:ObjectId(p._id)})
 
                     db.collection("messages").insertOne({from: p.name, to: "Todos", text: "sai da sala...", type: "status", time: dayjs().format().substring(11,19)})
