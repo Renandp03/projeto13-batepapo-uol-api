@@ -124,6 +124,8 @@ app.get("/messages", async (req,res) => {
     const { limit } = req.query
     const { user } = req.headers
 
+    if(limit <= 0) return res.status(422).send("limite invalido")
+
     function select(message,user){
         if(message.to === user || message.type === user || message.from === user || message.type == "status"){
             return message
