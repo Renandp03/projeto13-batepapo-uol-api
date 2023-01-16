@@ -84,13 +84,11 @@ app.post("/messages", async (req,res) => {
     const { user } = req.headers
     const time = dayjs().format().substring(11,19)
 
-
-
     const participant = await db.collection("participants").findOne({name:user})
 
     if(!participant){return res.status(422).send("participante não existe")}
 
-    const message = {to,text,type,time,from:user}
+    const message = {to,text,type,from:user,time}
     const messageSchema = Joi.object({
         from:Joi.string().required().min(1),
         to:Joi.string().required().min(1),
@@ -125,14 +123,14 @@ app.get("/messages", async (req,res) => {
   
     const { user } = req.headers
     
-    if(limit<=0 ) return res.status(422).send("limite invalido")
+    if(limit<=0 || isNaN(limit)) return res.status(422).send("limite invalido")
 
     function select(message,user){
         if(message.to === user || message.type === "message" || message.from === user || message.type == "status"){
             return message
         }
     }
-    
+
 
    try{
        const messages =  await db.collection("messages").find().toArray() 
