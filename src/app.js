@@ -119,11 +119,11 @@ app.post("/messages", async (req,res) => {
 
 app.get("/messages", async (req,res) => {
 
-    const limit = parseFloat(req.query.limit)
+  
   
     const { user } = req.headers
     
-    if(limit<=0 || isNaN(limit)) return res.status(422).send("limite invalido")
+    
 
     function select(message,user){
         if(message.to === user || message.type === "message" || message.from === user || message.type == "status"){
@@ -136,7 +136,11 @@ app.get("/messages", async (req,res) => {
        const messages =  await db.collection("messages").find().toArray() 
        const filterMessages = [... messages].filter((m)=> select(m,user))
 
-       if(limit) {return res.send (filterMessages.slice(filterMessages.length -limit, filterMessages.length))}
+       if(req.query.limit){
+        const limit = parseFloat(req.query.limit)
+        if(limit < 1 || isNaN(limit) ) return res.status(422).send("limite invalido")
+        return res.send (filterMessages.slice(filterMessages.length -limit, filterMessages.length))
+       }
 
        res.send(filterMessages)
    }
