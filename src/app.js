@@ -121,19 +121,18 @@ app.post("/messages", async (req,res) => {
 
 app.get("/messages", async (req,res) => {
 
-    const limit = Number(req.query.limit)
+    const limit = parseFloat(req.query.limit)
+  
     const { user } = req.headers
-
-    if(limit){
-        if(limit <= 0 || limit !== parseInt(limit)) return res.status(422).send("limite invalido")
-    }
-
+    
+    if(limit<=0 ) return res.status(422).send("limite invalido")
 
     function select(message,user){
         if(message.to === user || message.type === "message" || message.from === user || message.type == "status"){
             return message
         }
     }
+    
 
    try{
        const messages =  await db.collection("messages").find().toArray() 
