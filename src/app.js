@@ -124,7 +124,10 @@ app.get("/messages", async (req,res) => {
     const limit = Number(req.query.limit)
     const { user } = req.headers
 
-    if(limit <= 0 || limit !== parseInt(limit)) return res.status(422).send("limite invalido")
+    if(limit){
+        if(limit <= 0 || limit !== parseInt(limit)) return res.status(422).send("limite invalido")
+    }
+
 
     function select(message,user){
         if(message.to === user || message.type === "message" || message.from === user || message.type == "status"){
@@ -136,7 +139,7 @@ app.get("/messages", async (req,res) => {
        const messages =  await db.collection("messages").find().toArray() 
        const filterMessages = [... messages].filter((m)=> select(m,user))
 
-       if(limit) return res.send (filterMessages.slice(filterMessages.length -limit, filterMessages.length))
+       if(limit) {return res.send (filterMessages.slice(filterMessages.length -limit, filterMessages.length))}
 
        res.send(filterMessages)
    }
