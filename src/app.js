@@ -139,10 +139,10 @@ app.get("/messages", async (req,res) => {
        if(req.query.limit){
         const limit = parseFloat(req.query.limit)
         if(limit < 1 || isNaN(limit) ) return res.status(422).send("limite invalido")
-        return res.send (filterMessages.slice(filterMessages.length -limit, filterMessages.length))
+        return res.send (filterMessages.reverse().slice(0,limit))
        }
 
-       res.send(filterMessages)
+       res.send(filterMessages.reverse())
    }
    catch{
     res.send("algo deu errado")
