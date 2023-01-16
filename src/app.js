@@ -90,7 +90,7 @@ app.post("/messages", async (req,res) => {
 
     if(!participant){return res.status(422).send("participante não existe")}
 
-    const message = {from:user,to,text,type,time}
+    const message = {to,text,type,time,from:user}
     const messageSchema = Joi.object({
         from:Joi.string().required().min(1),
         to:Joi.string().required().min(1),
@@ -121,13 +121,13 @@ app.post("/messages", async (req,res) => {
 
 app.get("/messages", async (req,res) => {
 
-    const { limit } = req.query
+    const limit = Number(req.query.limit)
     const { user } = req.headers
 
-    if(limit <= 0) return res.status(422).send("limite invalido")
+    if(limit <= 0 || limit !== parseInt(limit)) return res.status(422).send("limite invalido")
 
     function select(message,user){
-        if(message.to === user || message.type === user || message.from === user || message.type == "status"){
+        if(message.to === user || message.type === "message" || message.from === user || message.type == "status"){
             return message
         }
     }
